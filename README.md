@@ -1,0 +1,1 @@
+# Automated-Seismic-Analysis-using-Etabs-API
