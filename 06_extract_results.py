@@ -329,27 +329,21 @@ if __name__ == "__main__":
     load_info = read_load_cases(sap_model)
     print("Load cases:", load_info['load_cases'])
 
-    # ── DEBUG: force Dead to be included in the run, then re-run ──
-    flag_ret = sap_model.Analyze.SetRunCaseFlag("Dead", True)
-    print("SetRunCaseFlag('Dead', True) ret:", flag_ret)
+    # IMPORTANT: RunAnalysis() only re-runs cases that are flagged to run.
+    # If a case (e.g. "Dead") was never flagged, RunAnalysis() can still
+    # return 0 (success) while that case has zero results. Always confirm
+    # the cases you need are flagged before running.
+    for case_name in ["Dead", "Live", "Modal", "CP + FF", "Wall",
+                       "~LLRF", "~ChineseX", "~ChineseY"]:
+        sap_model.Analyze.SetRunCaseFlag(case_name, True)
 
-    save_ret = sap_model.File.Save()
-    print("File.Save ret:", save_ret)
-
+    sap_model.File.Save()
     ret = sap_model.Analyze.RunAnalysis()
     print("RunAnalysis ret:", ret)
 
-    sap_model.Results.Setup.DeselectAllCasesAndCombosForOutput()
-    ret2 = sap_model.Results.Setup.SetCaseSelectedForOutput("Dead")
-    print("SetCaseSelectedForOutput('Dead') ret:", ret2)
-
-    r_debug = sap_model.Results.BaseReact()
-    print("BaseReact raw:", r_debug)
-    # ── END DEBUG ──
-    
     # Test modal
     print("\n── Modal Results ──")
-    modal = get_modal_results(sap_model, "Modal", debug=True)
+    modal = get_modal_results(sap_model, "Modal", debug=False)
     if modal:
         print(f"  T1={modal['T1']:.3f}s  T2={modal['T2']:.3f}s  T3={modal['T3']:.3f}s")
         print(f"  SumUX={modal['SumUX']:.1%}  SumUY={modal['SumUY']:.1%}")
